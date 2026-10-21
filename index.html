@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a0b2e">
+<title>Настя vs Гена</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    background: linear-gradient(160deg, #1a0b2e 0%, #2d0f4a 40%, #4a0f2e 100%);
+    color: #fff; display: flex; flex-direction: column;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .app { flex: 1; display: flex; flex-direction: column; max-width: 500px; width: 100%; margin: 0 auto; padding: 6px 12px; position: relative; overflow: hidden; min-height: 0; }
+
+  /* === HEADER === */
+  .header { display: flex; justify-content: space-between; align-items: center; padding: 2px 0; flex-shrink: 0; position: relative; }
+  .title { font-size: clamp(17px, 5vw, 22px); font-weight: 900; letter-spacing: -0.5px; background: linear-gradient(90deg, #ff2d87, #ff6b35, #ffcc00); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 2px 8px rgba(255, 45, 135, 0.3)); margin: 0 auto; }
+  .header-btns { position: absolute; right: 0; display: flex; gap: 4px; }
+  .icon-btn { background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 14px; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .icon-btn:active { background: rgba(255,255,255,0.2); }
+
+  /* === WALLET BAR === */
+  .wallet-bar { display: flex; justify-content: space-between; background: rgba(0,0,0,0.3); border-radius: 10px; padding: 6px 12px; margin-bottom: 4px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1); }
+  .wallet-item { font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 4px; }
+  .wallet-item span:last-child { color: #ffcc00; }
+
+  /* === STATS BAR === */
+  .stats-bar { display: flex; gap: 3px; padding: 3px 0; flex-shrink: 0; }
+  .stat-chip { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 4px 2px; text-align: center; min-width: 0; overflow: hidden; }
+  .stat-chip .s-label { font-size: 7px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.2px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stat-chip .s-value { font-size: 13px; font-weight: 900; color: #ffcc00; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stat-chip.highlight .s-value { color: #ff2d87; }
+  .stat-chip.gold .s-value { color: #ffcc00; }
+  .stat-chip.blue .s-value { color: #4a9eff; }
+  .stat-chip.green .s-value { color: #00ff88; }
+
+  /* === ARENA === */
+  .arena { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px; flex-shrink: 0; position: relative; }
+  .fighter { text-align: center; flex: 1; transition: transform 0.15s cubic-bezier(.34,1.56,.64,1); position: relative; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+  .fighter.hit { animation: shake 0.4s ease; }
+  .fighter.attack { animation: lunge 0.3s cubic-bezier(.34,1.56,.64,1); }
+  .fighter.rage .emoji { animation: rageShake 0.15s linear infinite; }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-8px) rotate(-5deg); } 40% { transform: translateX(8px) rotate(5deg); } 60% { transform: translateX(-5px) rotate(-3deg); } 80% { transform: translateX(5px) rotate(3deg); } }
+  @keyframes lunge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(30px) scale(1.1); } }
+  @keyframes rageShake { 0%, 100% { transform: translate(0, 0) rotate(0); } 25% { transform: translate(-2px, -1px) rotate(-3deg); } 75% { transform: translate(2px, 1px) rotate(3deg); } }
+  
+  /* Контейнеры для эмодзи */
+  .nastya-avatar, .gena-avatar { position: relative; display: inline-block; width: 70px; height: 70px; margin-bottom: 4px; }
+  .nastya-avatar { cursor: pointer; }
+  .fighter .emoji { font-size: 50px; line-height: 1; display: block; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4)); transition: transform 0.2s; }
+  
+  /* Аккуратный значок информации вместо пальца */
+  .tap-hint { 
+    position: absolute; 
+    top: -2px; 
+    right: -2px; 
+    font-size: 14px; 
+    opacity: 0.6; 
+    z-index: 10;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    transition: opacity 0.2s;
+  }
+  .nastya-avatar:active .tap-hint { opacity: 1; }
+
+  .fighter .name { font-size: 11px; font-weight: 700; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 10; }
+  .fighter .hp-bar { width: 65px; max-width: 100%; height: 5px; background: rgba(255,255,255,0.12); border-radius: 3px; margin: 3px auto 0; overflow: hidden; }
+  .fighter .hp-fill { height: 100%; border-radius: 3px; transition: width 0.4s cubic-bezier(.34,1.56,.64,1); }
+  .nastya .hp-fill { background: linear-gradient(90deg, #ff2d87, #ff6b9d); }
+  .gena .hp-fill { background: linear-gradient(90deg, #4a9eff, #6bc5ff); }
+  .status-icon { font-size: 13px; height: 17px; line-height: 17px; margin-top: 1px; white-space: nowrap; overflow: hidden; }
+  
+  .vs { font-size: 18px; font-weight: 900; color: #ffcc00; text-shadow: 0 0 20px rgba(255,204,0,0.6); flex-shrink: 0; animation: pulse 1.5s ease-in-out infinite; margin-top: 20px; }
+  @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.15); opacity: 0.8; } }
+
+  /* === DAMAGE POPUP === */
+  .damage-popup { position: absolute; font-size: 24px; font-weight: 900; color: #ff2d87; text-shadow: 0 0 20px rgba(255,45,135,0.8), 0 2px 4px rgba(0,0,0,0.5); pointer-events: none; z-index: 100; animation: dmgFloat 0.9s ease-out forwards; white-space: nowrap; }
+  @keyframes dmgFloat { 0% { opacity: 1; transform: translateY(0) scale(0.5); } 30% { transform: translateY(-20px) scale(1.3); } 100% { opacity: 0; transform: translateY(-60px) scale(1); } }
+
+  /* === LOG === */
+  .log { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 3px 1px; margin: 2px 0; min-height: 0; scrollbar-width: none; }
+  .log::-webkit-scrollbar { display: none; }
+  .log-entry { font-size: 12px; line-height: 1.35; padding: 5px 9px; margin-bottom: 3px; border-radius: 9px; animation: slideIn 0.3s ease; word-wrap: break-word; overflow-wrap: break-word; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .log-entry.nastya-msg { background: rgba(255, 45, 135, 0.15); border-left: 3px solid #ff2d87; color: #ffb3d1; }
+  .log-entry.gena-msg { background: rgba(74, 158, 255, 0.15); border-left: 3px solid #4a9eff; color: #b3d9ff; }
+  .log-entry.system-msg { background: rgba(255, 204, 0, 0.1); border-left: 3px solid #ffcc00; color: #ffe680; font-weight: 600; text-align: center; font-size: 11px; }
+  .log-entry.buff-msg { background: rgba(0, 255, 136, 0.12); border-left: 3px solid #00ff88; color: #88ffbb; font-weight: 700; text-align: center; font-size: 11px; }
+  .log-entry .speaker { font-weight: 800; font-size: 9px; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.7; display: block; margin-bottom: 1px; }
+
+  /* === COMBO === */
+  .combo { text-align: center; font-size: 12px; font-weight: 900; color: #ffcc00; text-shadow: 0 0 16px rgba(255,204,0,0.7); height: 17px; flex-shrink: 0; transition: opacity 0.2s; }
+  .combo.hidden { opacity: 0; }
+
+  /* === BUTTONS === */
+  .buttons { flex-shrink: 0; padding-top: 2px; }
+  .btn { width: 100%; padding: 12px; font-size: 14px; font-weight: 800; font-family: inherit; border: none; border-radius: 13px; color: #fff; cursor: pointer; letter-spacing: 0.2px; transition: transform 0.1s, opacity 0.2s; margin-bottom: 5px; background: linear-gradient(135deg, #ff2d87, #ff6b35); box-shadow: 0 4px 16px rgba(255,45,135,0.35); position: relative; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .btn:active { transform: scale(0.96); opacity: 0.9; }
+  .btn:disabled { opacity: 0.4; transform: none; box-shadow: none; }
+  .btn-row { display: flex; gap: 5px; width: 100%; }
+  .btn-row .btn { width: auto; flex: 1; margin-bottom: 0; padding: 10px 4px; font-size: 11px; min-width: 0; }
+  .btn.secondary { background: rgba(255,255,255,0.08); box-shadow: none; border: 1px solid rgba(255,255,255,0.15); }
+
+  /* === MODAL === */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; padding: 14px; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  .modal-overlay.show { opacity: 1; pointer-events: auto; }
+  .modal { background: linear-gradient(160deg, #2d0f4a, #1a0b2e); border: 1px solid rgba(255,45,135,0.3); border-radius: 18px; padding: 16px 14px; width: 100%; max-width: 400px; max-height: 88vh; overflow-y: auto; -webkit-overflow-scrolling: touch; transform: scale(0.9); transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); scrollbar-width: none; }
+  .modal::-webkit-scrollbar { display: none; }
+  .modal-overlay.show .modal { transform: scale(1); }
+  .modal h2 { font-size: 17px; font-weight: 900; margin-bottom: 3px; background: linear-gradient(90deg, #ff2d87, #ffcc00); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .modal p { font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 10px; line-height: 1.5; }
+
+  /* === PROFILE === */
+  .profile-header { text-align: center; margin-bottom: 12px; }
+  .profile-avatar { font-size: 54px; display: block; line-height: 1; margin-bottom: 4px; }
+  .profile-stats { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; background: rgba(0,0,0,0.2); border-radius: 10px; padding: 10px; border: 1px solid rgba(255,255,255,0.05); }
+  .profile-stat-row { display: flex; justify-content: space-between; font-size: 12px; }
+  .profile-stat-row span:first-child { color: rgba(255,255,255,0.6); }
+  .profile-stat-row span:last-child { font-weight: 800; color: #ff2d87; }
+  
+  .shop-tabs { display: flex; gap: 4px; margin-bottom: 12px; }
+  .shop-tab { flex: 1; padding: 8px 4px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: rgba(255,255,255,0.6); font-size: 11px; font-weight: 800; cursor: pointer; text-align: center; }
+  .shop-tab.active { background: rgba(255,45,135,0.2); border-color: #ff2d87; color: #fff; }
+  .shop-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; }
+  .shop-item-info { flex: 1; min-width: 0; margin-right: 8px; }
+  .shop-item-name { font-size: 13px; font-weight: 800; margin-bottom: 2px; }
+  .shop-item-desc { font-size: 10px; color: rgba(255,255,255,0.5); line-height: 1.2; }
+  .shop-buy-btn { background: linear-gradient(135deg, #ff2d87, #ff6b35); border: none; border-radius: 8px; color: #fff; font-size: 11px; font-weight: 800; padding: 8px 10px; white-space: nowrap; cursor: pointer; box-shadow: 0 2px 8px rgba(255,45,135,0.3); }
+  .shop-buy-btn:disabled { background: #555; box-shadow: none; }
+  
+  .premium-btn { background: linear-gradient(135deg, #ffcc00, #ff2d87); box-shadow: 0 4px 15px rgba(255, 204, 0, 0.4); color: #fff; font-weight: 900; }
+  .premium-btn:active { transform: scale(0.96); }
+
+  .promo-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff; font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 10px; outline: none; }
+  .promo-input::placeholder { color: rgba(255,255,255,0.3); }
+
+  .reason-btn { width: 100%; text-align: left; padding: 10px 12px; margin-bottom: 6px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .reason-btn:active { background: rgba(255,45,135,0.2); border-color: rgba(255,45,135,0.5); transform: scale(0.98); }
+  .reason-btn .rtext { flex: 1; line-height: 1.3; word-wrap: break-word; overflow-wrap: break-word; min-width: 0; }
+  .reason-btn .rstats { font-size: 10px; font-weight: 800; color: #ffcc00; white-space: nowrap; flex-shrink: 0; }
+
+  /* === RESULT SCREEN === */
+  .result-emoji { font-size: 46px; text-align: center; display: block; margin: 2px 0 6px; }
+  .result-title { text-align: center; font-size: 19px; font-weight: 900; margin-bottom: 4px; }
+  .result-text { text-align: center; font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.4; margin-bottom: 12px; }
+  .score-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 11px; gap: 6px; }
+  .score-row:last-child { border-bottom: none; }
+  .score-row .label { color: rgba(255,255,255,0.6); word-wrap: break-word; overflow-wrap: break-word; min-width: 0; flex: 1; }
+  .score-row .value { font-weight: 800; color: #ffcc00; white-space: nowrap; flex-shrink: 0; }
+
+  /* === CONFETTI & FLASH & TOAST === */
+  .confetti { position: fixed; width: 10px; height: 10px; pointer-events: none; z-index: 2000; animation: confettiFall 2.5s ease-in forwards; }
+  @keyframes confettiFall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(720deg); } }
+  .flash { position: fixed; inset: 0; background: #fff; pointer-events: none; z-index: 1500; opacity: 0; }
+  .flash.active { animation: flashAnim 0.2s ease-out; }
+  @keyframes flashAnim { 0% { opacity: 0.6; } 100% { opacity: 0; } }
+  .toast { position: fixed; top: calc(env(safe-area-inset-top) + 50px); left: 50%; transform: translateX(-50%) translateY(-100px); background: linear-gradient(135deg, rgba(255,45,135,0.95), rgba(255,107,53,0.95)); padding: 9px 18px; border-radius: 18px; font-size: 12px; font-weight: 800; z-index: 1200; opacity: 0; transition: all 0.4s cubic-bezier(.34,1.56,.64,1); pointer-events: none; box-shadow: 0 4px 20px rgba(255,45,135,0.5); text-align: center; max-width: 90vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+  /* === RAGE OVERLAY === */
+  .rage-overlay { position: fixed; inset: 0; background: radial-gradient(circle, transparent 30%, rgba(255,45,135,0.3) 100%); pointer-events: none; z-index: 900; opacity: 0; transition: opacity 0.3s; }
+  .rage-overlay.active { opacity: 1; animation: ragePulse 0.8s ease-in-out infinite; }
+  @keyframes ragePulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.6; } }
+
+  /* === ROULETTE === */
+  .roulette-container { position: relative; width: 100%; height: 120px; overflow: hidden; background: rgba(0,0,0,0.4); border-radius: 12px; margin-bottom: 12px; border: 2px solid rgba(255,204,0,0.3); }
+  .roulette-track { display: flex; height: 100%; align-items: center; width: max-content; transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1); }
+  .roulette-item { width: 80px; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid rgba(255,255,255,0.1); font-size: 12px; font-weight: bold; flex-shrink: 0; }
+  .roulette-item .r-emoji { font-size: 28px; margin-bottom: 4px; }
+  .roulette-pointer { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: #ff2d87; box-shadow: 0 0 10px #ff2d87; transform: translateX(-50%); z-index: 10; }
+  .roulette-pointer::before, .roulette-pointer::after { content: ''; position: absolute; left: 50%; transform: translateX(-50%); border: 6px solid transparent; }
+  .roulette-pointer::before { top: 0; border-top-color: #ff2d87; }
+  .roulette-pointer::after { bottom: 0; border-bottom-color: #ff2d87; }
+
+  /* === SMALL SCREENS === */
+  @media (max-height: 700px) {
+    .fighter .emoji { font-size: 40px; } .nastya-avatar, .gena-avatar { width: 60px; height: 60px; } .fighter .hp-bar { width: 55px; } .log-entry { font-size: 11px; padding: 4px 8px; } .stat-chip .s-value { font-size: 12px; } .btn { padding: 10px; font-size: 13px; } .btn-row .btn { font-size: 10px; padding: 8px 4px; } .vs { font-size: 16px; } .wallet-bar { padding: 4px 10px; }
+  }
+  @media (max-height: 600px) {
+    .header { display: none; } .icon-btn { display: none; } .fighter .emoji { font-size: 30px; } .nastya-avatar, .gena-avatar { width: 50px; height: 50px; } .stat-chip .s-label { display: none; } .stat-chip { padding: 3px 1px; } .stat-chip .s-value { font-size: 11px; } .reason-btn { padding: 8px 10px; font-size: 11px; } .modal h2 { font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <div class="header">
+    <div class="title">🥊 Настя vs Гена</div>
+    <div class="header-btns">
+      <button class="icon-btn" id="soundBtn" title="Звук">🔊</button>
+      <button class="icon-btn" id="helpBtn" title="Помощь">❓</button>
+    </div>
+  </div>
+
+  <div class="wallet-bar">
+    <div class="wallet-item">🪙 <span id="walletCoins">0</span></div>
+    <div class="wallet-item">💎 <span id="walletCrystals">0</span></div>
+    <div class="wallet-item">🍕 <span id="walletHunger">100</span>%</div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-chip highlight">
+      <div class="s-label">Уровень</div><div class="s-value" id="statRound">1</div>
+    </div>
+    <div class="stat-chip gold">
+      <div class="s-label">Урон</div><div class="s-value" id="statDamage">0</div>
+    </div>
+    <div class="stat-chip blue">
+      <div class="s-label">Комбо</div><div class="s-value" id="statCombo">x0</div>
+    </div>
+    <div class="stat-chip green">
+      <div class="s-label">Опыт</div><div class="s-value" id="statXp">0/50</div>
+    </div>
+  </div>
+
+  <div class="arena">
+    <div class="fighter nastya" id="nastya">
+      <div class="nastya-avatar" id="profileBtn">
+        <div class="tap-hint">ℹ️</div>
+        <span class="emoji" id="nastyaEmoji">👩‍🦰</span>
+      </div>
+      <div class="name">Настя</div>
+      <div class="hp-bar"><div class="hp-fill" id="nastyaHp" style="width:100%"></div></div>
+      <div class="status-icon" id="nastyaStatus"></div>
+    </div>
+
+    <div class="vs">VS</div>
+
+    <div class="fighter gena" id="gena">
+      <div class="gena-avatar">
+        <span class="emoji" id="genaEmoji">🧑</span>
+      </div>
+      <div class="name">Гена</div>
+      <div class="hp-bar"><div class="hp-fill" id="genaHp" style="width:100%"></div></div>
+      <div class="status-icon" id="genaStatus"></div>
+    </div>
+  </div>
+
+  <div class="combo hidden" id="combo"></div>
+  <div class="log" id="log"></div>
+
+  <div class="buttons">
+    <button class="btn" id="attackBtn">🥊 Выбрать причину</button>
+    <div class="btn-row">
+      <button class="btn secondary" id="shopBtn">🛍️ Магазины</button>
+      <button class="btn secondary" id="invBtn">🎒 Инвентарь</button>
+      <button class="btn secondary" id="promoBtn">🎁 Промо</button>
+      <button class="btn secondary" id="resetBtn">🔄</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE MODAL -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal">
+    <div class="profile-header">
+      <span class="profile-avatar" id="profileEmoji">👩‍🦰</span>
+      <h2 style="justify-content: center;">Профиль Насти</h2>
+    </div>
+    
+    <div class="profile-stats">
+      <div class="profile-stat-row"><span>Гена получил пизды:</span> <span id="profDefeats">0 раз</span></div>
+      <div class="profile-stat-row"><span>Всего урона:</span> <span id="profDamage">0</span></div>
+      <div class="profile-stat-row"><span>Критов:</span> <span id="profCrits">0</span></div>
+      <div class="profile-stat-row"><span>Макс. комбо:</span> <span id="profCombo">x0</span></div>
+    </div>
+
+    <div class="shop-tabs">
+      <div class="shop-tab active" id="profTabLook">👗 Образ</div>
+      <div class="shop-tab" id="profTabAch">🏅 Заслуги</div>
+    </div>
+    
+    <div id="profileContent"></div>
+
+    <button class="btn secondary" style="margin-top:10px" onclick="document.getElementById('profileModal').classList.remove('show')">Закрыть</button>
+  </div>
+</div>
+
+<!-- GENA SKINS MODAL -->
+<div class="modal-overlay" id="genaSkinsModal">
+  <div class="modal">
+    <h2>Образы Гены</h2>
+    <p>Выбери скин, чтобы изменить его внешний вид.</p>
+    <div id="genaSkinsContent"></div>
+    <button class="btn secondary" style="margin-top:10px" onclick="document.getElementById('genaSkinsModal').classList.remove('show')">Закрыть</button>
+  </div>
+</div>
+
+<!-- TUTORIAL MODAL -->
+<div class="modal-overlay" id="tutorialModal">
+  <div class="modal">
+    <h2>Привет, я Настя...</h2>
+    <div style="font-size: 13px; line-height: 1.5; color: #ffe6f0; margin-bottom: 12px;">
+      ...и я очень люблю Гену. Мы не можем жить друг без друга. <br><br>
+      И единственный его минус — как вы уже догадались — в том, что он <b>МУЖЛО СУКА ЕБАНОЕЕЕЕ</b>. 😡
+    </div>
+    
+    <h2 style="font-size:15px; margin-top:10px">Как играть:</h2>
+    <ul style="font-size: 12px; line-height: 1.5; color: rgba(255,255,255,0.8); margin-bottom: 16px; padding-left: 20px;">
+      <li>Жми <b>«🥊 Выбрать причину»</b>, чтобы нанести удар.</li>
+      <li>⚠️ <b>Голод:</b> Настя тратит 10% голода за удар. Еду добывай в <b>Перекрестке</b> или выбивай в <b>Рулетке</b>.</li>
+      <li>Нажми на <b>Настю</b>, чтобы открыть её профиль, надеть косметику и посмотреть заслуги!</li>
+      <li>В <b>Золотом Яблоке</b> можно купить новые образы для <b>Гены</b> (например, Собачку 🐶 за 1000💎).</li>
+      <li>После каждого раунда дают <b>1 Кристалл (💎)</b> и <b>Монеты (🪙)</b>.</li>
+      <li>Не хватает денег? Ищи <b>Промокоды</b> у своего парня 😉</li>
+    </ul>
+    <button class="btn" id="startGameBtn">🔥 Начать избиение</button>
+  </div>
+</div>
+
+<!-- SHOP MODAL -->
+<div class="modal-overlay" id="shopModal">
+  <div class="modal">
+    <h2>Магазины</h2>
+    <div class="shop-tabs">
+      <div class="shop-tab active" id="tabFood">🥨 Перекресток</div>
+      <div class="shop-tab" id="tabCosmetics">💄 Золотое Яблоко</div>
+    </div>
+    <div id="shopContent"></div>
+    
+    <button class="btn premium-btn" id="genaSkinsBtn" style="margin-top:10px; display:none; background: linear-gradient(135deg, #4a9eff, #6bc5ff);">🐶 Скины для Гены</button>
+    <button class="btn premium-btn" id="premiumSpinBtn" style="margin-top:10px">🎰 Уникальная рулетка (50 💎)</button>
+    
+    <button class="btn secondary" style="margin-top:8px" onclick="document.getElementById('shopModal').classList.remove('show')">Закрыть</button>
+  </div>
+</div>
+
+<!-- INVENTORY MODAL -->
+<div class="modal-overlay" id="invModal">
+  <div class="modal">
+    <h2>Инвентарь</h2>
+    <div class="shop-tabs">
+      <div class="shop-tab active" id="invTabFridge">🧊 Холодильник</div>
+    </div>
+    <div id="invContent"></div>
+    <button class="btn secondary" style="margin-top:10px" onclick="document.getElementById('invModal').classList.remove('show')">Закрыть</button>
+  </div>
+</div>
+
+<!-- PROMO MODAL -->
+<div class="modal-overlay" id="promoModal">
+  <div class="modal">
+    <h2>🎁 Ввод промокода</h2>
+    <p>Введи код, чтобы получить деньги и кристаллы. Коды ищи в телеграме у своего парня.</p>
+    <input type="text" id="promoInput" class="promo-input" placeholder="НАПРИМЕР: GENAMUJLO" autocomplete="off">
+    <button class="btn" id="redeemBtn">Активировать</button>
+    <button class="btn secondary" style="margin-top:8px" onclick="document.getElementById('promoModal').classList.remove('show')">Закрыть</button>
+  </div>
+</div>
+
+<!-- ROULETTE MODAL (ОБЫЧНАЯ) -->
+<div class="modal-overlay" id="rouletteModal">
+  <div class="modal" style="text-align: center;">
+    <h2>🎰 Рулетка Удачи!</h2>
+    <p>Крути барабан и забирай приз!</p>
+    <div class="roulette-container">
+      <div class="roulette-track" id="rouletteTrack"></div>
+      <div class="roulette-pointer"></div>
+    </div>
+    <button class="btn" id="spinBtn">🎲 Крутить!</button>
+    <button class="btn secondary" style="margin-top:8px" id="closeRouletteBtn" disabled>Забрать позже</button>
+  </div>
+</div>
+
+<!-- PREMIUM ROULETTE MODAL (ЗА КРИСТАЛЛЫ) -->
+<div class="modal-overlay" id="premiumRouletteModal">
+  <div class="modal" style="text-align: center;">
+    <h2>🌟 Золотая Рулетка</h2>
+    <p>Здесь падают УНИКАЛЬНЫЕ предметы!</p>
+    <div class="roulette-container" style="border-color: #ffcc00; box-shadow: 0 0 20px rgba(255,204,0,0.3);">
+      <div class="roulette-track" id="premiumTrack"></div>
+      <div class="roulette-pointer" style="background: #ffcc00; box-shadow: 0 0 10px #ffcc00;"></div>
+    </div>
+    <button class="btn premium-btn" id="premiumSpinBtnGo">🌟 Крутить (50 💎)</button>
+    <button class="btn secondary" style="margin-top:8px" onclick="document.getElementById('premiumRouletteModal').classList.remove('show')">Закрыть</button>
+  </div>
+</div>
+
+<!-- REASON MODAL -->
+<div class="modal-overlay" id="reasonModal">
+  <div class="modal">
+    <h2>Почему Настя бьёт Гену?</h2>
+    <p>Выбери причину дня. Настя уже всё решила, но дадим тебе иллюзию выбора.</p>
+    <div id="reasonList"></div>
+  </div>
+</div>
+
+<!-- RESULT MODAL -->
+<div class="modal-overlay" id="resultModal">
+  <div class="modal">
+    <span class="result-emoji" id="resultEmoji">🏆</span>
+    <div class="result-title" id="resultTitle">ПОБЕДА!</div>
+    <div class="result-text" id="resultText"></div>
+    <div id="scoreBreakdown"></div>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn" id="continueBtn" style="flex: 1.5;">▶️ Дальше</button>
+      <button class="btn" id="rouletteBtn" style="background: linear-gradient(135deg, #ffcc00, #ff6b35); box-shadow: 0 4px 16px rgba(255,204,0,0.4); display: none;">🎰 Рулетка</button>
+      <button class="btn secondary" id="playAgainBtn">🔄</button>
+    </div>
+  </div>
+</div>
+
+<div class="flash" id="flash"></div>
+<div class="rage-overlay" id="rageOverlay"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ==========================================
+  // ЗВУКОВОЙ ДВИЖОК
+  // ==========================================
+  let audioCtx = null;
+  let isMuted = localStorage.getItem('nastya_muted') === 'true';
+
+  function initAudio() {
+    if (!audioCtx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) audioCtx = new AudioContext();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  }
+  document.body.addEventListener('touchstart', initAudio, { once: true });
+  document.body.addEventListener('mousedown', initAudio, { once: true });
+
+  function playTone(freq, type, duration, vol=0.1, slideFreq=null) {
+    if (isMuted || !audioCtx) return;
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      if (slideFreq) osc.frequency.exponentialRampToValueAtTime(slideFreq, audioCtx.currentTime + duration);
+      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + duration);
+    } catch(e) {}
+  }
+
+  const SFX = {
+    punch: () => playTone(150, 'square', 0.1, 0.15, 50),
+    hit: () => { playTone(100, 'sawtooth', 0.15, 0.2, 30); setTimeout(() => playTone(60, 'sine', 0.2, 0.1), 50); },
+    crit: () => { playTone(300, 'square', 0.1, 0.2, 100); setTimeout(() => playTone(200, 'sawtooth', 0.3, 0.2, 50), 50); },
+    rage: () => { playTone(100, 'sawtooth', 0.3, 0.2, 400); setTimeout(() => playTone(150, 'square', 0.4, 0.2, 600), 100); },
+    levelUp: () => { [262, 330, 392, 523].forEach((f, i) => setTimeout(() => playTone(f, 'sine', 0.2, 0.15), i * 100)); },
+    coin: () => { playTone(800, 'sine', 0.1, 0.1); setTimeout(() => playTone(1200, 'sine', 0.15, 0.1), 50); },
+    buy: () => { playTone(1000, 'sine', 0.1, 0.1); setTimeout(() => playTone(800, 'sine', 0.1, 0.1), 100); },
+    error: () => playTone(200, 'sawtooth', 0.2, 0.15, 100),
+    spin: () => { let tick = 0; const int = setInterval(() => { playTone(600 + Math.random()*200, 'square', 0.05, 0.05); tick++; if(tick>20) clearInterval(int); }, 150); },
+    win: () => { [440, 554, 659, 880].forEach((f, i) => setTimeout(() => playTone(f, 'sine', 0.15, 0.15), i * 80)); },
+    eat: () => { playTone(300, 'sine', 0.1, 0.1, 400); setTimeout(() => playTone(300, 'sine', 0.1, 0.1, 400), 150); }
+  };
+
+  const soundBtn = document.getElementById('soundBtn');
+  soundBtn.textContent = isMuted ? '🔇' : '🔊';
+  soundBtn.addEventListener('click', () => {
+    isMuted = !isMuted;
+    localStorage.setItem('nastya_muted', isMuted);
+    soundBtn.textContent = isMuted ? '🔇' : '🔊';
+    if (!isMuted) { initAudio(); SFX.coin(); }
+  });
+
+  // ==========================================
+  // ДАННЫЕ
+  // ==========================================
+  const XP_PER_LEVEL = 50;
+
+  const FOOD_ITEMS = [
+    { id: 'f1', name: 'Пирожок с сосиской', desc: '+20% голода', price: 150, hunger: 20 },
+    { id: 'f2', name: 'Шаурма', desc: '+50% голода', price: 450, hunger: 50 },
+    { id: 'f3', name: 'Пельмени (пачка)', desc: '+100% голода', price: 1000, hunger: 100 },
+    { id: 'f4', name: 'Доставка суши', desc: '+200% голода', price: 2500, hunger: 200 }
+  ];
+
+  const COSMETICS_ITEMS = [
+    { id: 'c1', name: 'Блеск для губ', desc: 'Выглядит дорого', price: 50, emoji: '💄', type: 'lip', unique: false },
+    { id: 'c2', name: 'Тушь для ресниц', desc: 'Взгляд василиска', price: 120, emoji: '👁️', type: 'eyes', unique: false },
+    { id: 'c3', name: 'Новый парик', desc: 'Смена имиджа', price: 300, emoji: '💇‍♀️', type: 'hair', unique: false },
+    { id: 'c4', name: 'Платье от кутюр', desc: 'Бить Гену в стиле', price: 800, emoji: '👗', type: 'dress', unique: false }
+  ];
+
+  const UNIQUE_ITEMS = [
+    { id: 'u1', name: 'Корона Императрицы', desc: 'Уникальный головной убор', emoji: '👑', type: 'hat', unique: true },
+    { id: 'u2', name: 'Очки "Крутая Настя"', desc: 'Уникальные очки', emoji: '🕶️', type: 'glasses', unique: true },
+    { id: 'u3', name: 'Аура Ярости', desc: 'Уникальная аура', emoji: '🔥', type: 'aura', unique: true },
+    { id: 'u4', name: 'Крылья Ангела', desc: 'Уникальная аура', emoji: '🪽', type: 'aura', unique: true },
+    { id: 'u5', name: 'Ковбойская шляпа', desc: 'Уникальный головной убор', emoji: '🤠', type: 'hat', unique: true },
+    { id: 'u6', name: 'Кошачьи ушки', desc: 'Уникальный головной убор', emoji: '🐱', type: 'hat', unique: true },
+    { id: 'u7', name: 'Нимб', desc: 'Уникальная аура', emoji: '😇', type: 'aura', unique: true }
+  ];
+
+  const GENA_SKINS = [
+    { id: 'g1', name: 'Обычный Гена', desc: 'Дефолтный мужло', price: 0, emoji: '🧑', default: true },
+    { id: 'g2', name: 'Гена-Ботаник', desc: 'В очках и с книжкой', price: 100, emoji: '🤓' },
+    { id: 'g3', name: 'Гена-Мачо', desc: 'Качок с бородой', price: 300, emoji: '🧔‍♂️' },
+    { id: 'g4', name: 'Гена-Демон', desc: 'Повелитель тьмы', price: 500, emoji: '👹' },
+    { id: 'g5', name: 'Собачка 🐶', desc: 'Самый дорогой и милый скин', price: 1000, emoji: '🐶' }
+  ];
+
+  const ACHIEVEMENTS = [
+    { id: 'a1', name: 'Первая кровь', desc: 'Победить Гену 1 раз', icon: '🥊', check: (s) => s.genaDefeats >= 1 },
+    { id: 'a2', name: 'Мастер комбо', desc: 'Собрать комбо x5', icon: '🔥', check: (s) => s.lifetimeMaxCombo >= 5 },
+    { id: 'a3', name: 'Критический удар', desc: 'Нанести 10 критов', icon: '💥', check: (s) => s.lifetimeCrits >= 10 },
+    { id: 'a4', name: 'Избиватель', desc: 'Победить Гену 10 раз', icon: '💀', check: (s) => s.genaDefeats >= 10 },
+    { id: 'a5', name: 'Модница', desc: 'Купить предмет в Золотом Яблоке', icon: '💄', check: (s) => s.inventoryCosmetics.length > 0 },
+    { id: 'a6', name: 'Золотая лихорадка', desc: 'Открыть уникальный предмет', icon: '🌟', check: (s) => s.inventoryCosmetics.some(id => id.startsWith('u')) },
+    { id: 'a7', name: 'Богачка', desc: 'Накопить 1000 монет', icon: '🪙', check: (s) => s.coins >= 1000 },
+    { id: 'a8', name: 'Железная леди', desc: 'Достичь 5 уровня', icon: '🛡️', check: (s) => s.level >= 5 }
+  ];
+
+  const PROMO_CODES = {
+    'GENAMUJLO': { coins: 1000, crystals: 10 },
+    'NASTYALOVE': { coins: 5000, crystals: 50 },
+    'MILAYAMOYA': { coins: 10000, crystals: 100 },
+    'PROSTI': { coins: 500, crystals: 0 },
+    'PELMENI': { coins: 1500, crystals: 5 },
+    'KRASAVICA': { coins: 2500, crystals: 25 },
+    'GENAILOVEYOU': { specialSkins: true },
+    'TEST': { special: true }
+  };
+
+  const ALL_REASONS = [
+    { text: 'Он существует', dmg: 10, combo: 1, icon: '🌀', unlockLvl: 1 },
+    { text: 'Он дышал слишком громко', dmg: 15, combo: 2, icon: '😤', unlockLvl: 1 },
+    { text: 'Он не ответил на сообщение 4 минуты', dmg: 35, combo: 3, icon: '📱', unlockLvl: 1 },
+    { text: 'Он оставил носки на диване', dmg: 22, combo: 2, icon: '🧦', unlockLvl: 1 },
+    { text: 'Он съел последний йогурт', dmg: 30, combo: 2, icon: '🥛', unlockLvl: 2 },
+    { text: 'Он сказал «ну ты поняла»', dmg: 25, combo: 3, icon: '💢', unlockLvl: 2 },
+    { text: 'Он не помыл за собой кружку', dmg: 26, combo: 2, icon: '☕', unlockLvl: 2 },
+    { text: 'Он смотрел на неё «как-то не так»', dmg: 20, combo: 4, icon: '👀', unlockLvl: 3 },
+    { text: 'Он назвал её «Настюх»', dmg: 28, combo: 3, icon: '🙄', unlockLvl: 3 },
+    { text: 'Он снова смотрел футбол вместо сериала', dmg: 32, combo: 3, icon: '⚽', unlockLvl: 3 },
+    { text: 'Он сказал «я подумаю»', dmg: 33, combo: 4, icon: '🤔', unlockLvl: 4 },
+    { text: 'Он сказал «а что я сделал?»', dmg: 36, combo: 4, icon: '🤷', unlockLvl: 4 },
+    { text: 'Он не смыл за собой раковину', dmg: 27, combo: 2, icon: '🚿', unlockLvl: 4 },
+    { text: 'Он сказал, что она не права', dmg: 40, combo: 5, icon: '🔥', unlockLvl: 5 },
+    { text: 'Он не заметил новую стрижку', dmg: 45, combo: 4, icon: '💇‍♀️', unlockLvl: 5 },
+    { text: 'Он заказал пиццу без неё', dmg: 41, combo: 3, icon: '🍕', unlockLvl: 5 },
+    { text: 'Он сказал «ты не так поняла»', dmg: 38, combo: 5, icon: '🗣️', unlockLvl: 6 },
+    { text: 'Он уснул во время её рассказа', dmg: 44, combo: 5, icon: '💤', unlockLvl: 6 },
+    { text: 'Он не похвалил её новый рецепт', dmg: 29, combo: 3, icon: '🍳', unlockLvl: 6 },
+    { text: 'Он лайкнул фото бывшей', dmg: 55, combo: 6, icon: '💔', unlockLvl: 7 },
+    { text: 'Он сказал, что кот красивее', dmg: 48, combo: 4, icon: '🐱', unlockLvl: 7 },
+    { text: 'Он сказал «я же говорил»', dmg: 46, combo: 5, icon: '🗯️', unlockLvl: 7 },
+    { text: 'Он предложил «успокоиться»', dmg: 50, combo: 6, icon: '💥', unlockLvl: 8 },
+    { text: 'Он сфоткал её неудачно', dmg: 39, combo: 4, icon: '📸', unlockLvl: 8 },
+    { text: 'Он не предложил помощь с сумками', dmg: 23, combo: 2, icon: '🛍️', unlockLvl: 8 },
+    { text: 'Он сказал «да ладно, что ты как маленькая»', dmg: 42, combo: 5, icon: '👶', unlockLvl: 9 },
+    { text: 'Он смотрел на телефон, пока она говорила', dmg: 34, combo: 3, icon: '📱', unlockLvl: 9 },
+    { text: 'Он опять забыл про годовщину', dmg: 60, combo: 6, icon: '📅', unlockLvl: 10 },
+    { text: 'Он сказал «тебе идёт этот свитер» подозрительно', dmg: 24, combo: 2, icon: '🧥', unlockLvl: 10 },
+    { text: 'Он храпел во сне', dmg: 18, combo: 2, icon: '😴', unlockLvl: 10 }
+  ];
+
+  const EXCUSES = [ 'Насть, я же ничего не делал!', 'Ты преувеличиваешь!', 'Давай поговорим спокойно.', 'Я не это имел в виду...', 'Ну прости, я не заметил.', 'Это была шутка, честно!', 'Я больше не буду. Наверное.', 'Может, пельменей?', 'Ты красивая, когда злишься.', 'Я тебя люблю, не бей!', 'Это всё кот виноват.', 'Я исправлюсь, обещаю!', 'Мне показалось, что ты не против.', 'Я просто устал, вот и всё.', 'Давай не будем ссориться из-за ерунды.' ];
+  const COUNTERS = [ { trigger: 'ничего не делал', reply: 'Вот именно! Бездействие — тоже действие!', bonus: 10, comboAdd: 1 }, { trigger: 'преувеличиваешь', reply: 'ГАЗЛАЙТИНГ!', bonus: 20, comboAdd: 2 }, { trigger: 'спокойно', reply: 'СПОКОЙНО?!', bonus: 50, comboAdd: 3 }, { trigger: 'не это имел', reply: 'А что ты имел в виду?! А?!', bonus: 15, comboAdd: 1 }, { trigger: 'прости', reply: '«Прости» не вернёт йогурт!', bonus: 25, comboAdd: 2 }, { trigger: 'шутка', reply: 'ШУТКА?! Я ТЕБЕ ПОКАЖУ ШУТКУ!', bonus: 30, comboAdd: 2 }, { trigger: 'больше не буду', reply: 'Ты это говорил в прошлый вторник!', bonus: 20, comboAdd: 1 }, { trigger: 'пельмен', reply: '...Ладно. Но это не считается.', bonus: 5, comboAdd: 0 }, { trigger: 'красивая', reply: 'Я ЗНАЮ! НЕ ОТМАЖЕШЬСЯ!', bonus: 35, comboAdd: 3 }, { trigger: 'люблю', reply: 'ЛЮБОВЬ НЕ ОПРАВДЫВАЕТ НОСКИ НА ДИВАНЕ!', bonus: 40, comboAdd: 3 }, { trigger: 'кот', reply: 'НЕ ТРОГАЙ КОТА!', bonus: 45, comboAdd: 4 }, { trigger: 'исправлюсь', reply: 'КОГДА?! ДАТУ НАЗОВИ!', bonus: 30, comboAdd: 2 }, { trigger: 'показалось', reply: 'ТЕБЕ ПОКАЗАЛОСЬ?!', bonus: 38, comboAdd: 3 }, { trigger: 'устал', reply: 'А Я НЕ УСТАЛА?!', bonus: 42, comboAdd: 4 }, { trigger: 'ерунды', reply: 'ЕРУНДЫ?! ДЛЯ ТЕБЯ ЭТО ЕРУНДЫ?!', bonus: 48, comboAdd: 5 } ];
+
+  const ROULETTE_PRIZES = [
+    { type: 'coins', amount: 50, name: '50 Монет', emoji: '🪙', color: '#ffcc00' },
+    { type: 'coins', amount: 150, name: '150 Монет', emoji: '💰', color: '#ffcc00' },
+    { type: 'item', id: 'f1', name: 'Пирожок', emoji: '🥟', color: '#ff6b35' },
+    { type: 'item', id: 'f2', name: 'Шаурма', emoji: '🌯', color: '#ff6b35' },
+    { type: 'crystals', amount: 2, name: '2 Кристалла', emoji: '💎', color: '#4a9eff' },
+    { type: 'crystals', amount: 5, name: '5 Кристаллов', emoji: '💎', color: '#4a9eff' },
+    { type: 'coins', amount: 500, name: '500 Монет (ДЖЕКПОТ)', emoji: '🎰', color: '#ff2d87' },
+    { type: 'item', id: 'f3', name: 'Пельмени', emoji: '🥟', color: '#00ff88' }
+  ];
+
+  // ==========================================
+  // СЕЙВЫ
+  // ==========================================
+  function loadSave() {
+    try {
+      const saved = localStorage.getItem('nastya_vs_gena_save_v8');
+      if (saved) {
+        const data = JSON.parse(saved);
+        return {
+          level: Math.max(1, parseInt(data.level) || 1),
+          xp: Math.max(0, parseInt(data.xp) || 0),
+          totalDamage: Math.max(0, parseInt(data.totalDamage) || 0),
+          maxCombo: Math.max(0, parseInt(data.maxCombo) || 0),
+          genaDefeats: Math.max(0, parseInt(data.genaDefeats) || 0),
+          lifetimeCrits: Math.max(0, parseInt(data.lifetimeCrits) || 0),
+          hasSeenTutorial: data.hasSeenTutorial === true,
+          coins: Math.max(0, parseInt(data.coins) || 0),
+          crystals: Math.max(0, parseInt(data.crystals) || 0),
+          hunger: Math.max(0, parseInt(data.hunger) || 100),
+          inventoryFridge: Array.isArray(data.inventoryFridge) ? data.inventoryFridge : [],
+          inventoryCosmetics: Array.isArray(data.inventoryCosmetics) ? data.inventoryCosmetics : [],
+          equippedCosmetics: data.equippedCosmetics || {},
+          usedPromos: Array.isArray(data.usedPromos) ? data.usedPromos : [],
+          roulettePending: data.roulettePending === true,
+          unlockedAchievements: Array.isArray(data.unlockedAchievements) ? data.unlockedAchievements : [],
+          unlockedSkins: Array.isArray(data.unlockedSkins) ? data.unlockedSkins : ['g1'],
+          equippedSkin: data.equippedSkin || 'g1'
+        };
+      }
+    } catch(e) {}
+    return { level: 1, xp: 0, totalDamage: 0, maxCombo: 0, genaDefeats: 0, lifetimeCrits: 0, hasSeenTutorial: false, coins: 100, crystals: 0, hunger: 100, inventoryFridge: [], inventoryCosmetics: [], equippedCosmetics: {}, usedPromos: [], roulettePending: false, unlockedAchievements: [], unlockedSkins: ['g1'], equippedSkin: 'g1' };
+  }
+
+  function saveGame() {
+    try {
+      localStorage.setItem('nastya_vs_gena_save_v8', JSON.stringify({
+        level: state.level, xp: state.xp, totalDamage: state.lifetimeDamage, maxCombo: Math.max(state.lifetimeMaxCombo, state.maxCombo),
+        genaDefeats: state.genaDefeats, lifetimeCrits: state.lifetimeCrits, hasSeenTutorial: state.hasSeenTutorial, coins: state.coins, crystals: state.crystals,
+        hunger: state.hunger, inventoryFridge: state.inventoryFridge, inventoryCosmetics: state.inventoryCosmetics,
+        equippedCosmetics: state.equippedCosmetics, usedPromos: state.usedPromos, roulettePending: state.roulettePending,
+        unlockedAchievements: state.unlockedAchievements, unlockedSkins: state.unlockedSkins, equippedSkin: state.equippedSkin
+      }));
+    } catch(e) {}
+  }
+
+  const saved = loadSave();
+  const state = {
+    ...saved,
+    lifetimeDamage: saved.totalDamage,
+    lifetimeMaxCombo: saved.maxCombo,
+    round: 1, nastyaHp: 100, genaHp: 100 + (saved.level * 10), genaMaxHp: 100 + (saved.level * 10),
+    combo: 0, maxCombo: 0, battleDamage: 0, rage: 0, rageActive: false, crits: 0, misses: 0, history: [], isAttacking: false, gameOver: false
+  };
+
+  const $ = id => document.getElementById(id);
+  const logEl = $('log');
+  const nastyaEl = $('nastya');
+  const genaEl = $('gena');
+  const nastyaHpEl = $('nastyaHp');
+  const genaHpEl = $('genaHp');
+  const comboEl = $('combo');
+  const attackBtn = $('attackBtn');
+  const rageOverlay = $('rageOverlay');
+
+  const rand = arr => arr[Math.floor(Math.random() * arr.length)];
+
+  function addLog(speaker, text, type) {
+    const entry = document.createElement('div');
+    entry.className = 'log-entry ' + type;
+    if (speaker) {
+      const sp = document.createElement('span'); sp.className = 'speaker'; sp.textContent = speaker; entry.appendChild(sp);
+    }
+    entry.appendChild(document.createTextNode(text));
+    logEl.appendChild(entry);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function checkAchievements() {
+    ACHIEVEMENTS.forEach(ach => {
+      if (!state.unlockedAchievements.includes(ach.id) && ach.check(state)) {
+        state.unlockedAchievements.push(ach.id);
+        saveGame();
+        SFX.levelUp();
+        toast('🏅 Достижение: ' + ach.name);
+        addLog('', '🏅 Получено достижение: ' + ach.name + ' (' + ach.desc + ')', 'buff-msg');
+        spawnConfetti();
+      }
+    });
+    updateUI();
+  }
+
+  function updateUI() {
+    $('statRound').textContent = state.level;
+    $('statDamage').textContent = state.battleDamage;
+    $('statCombo').textContent = 'x' + state.maxCombo;
+    $('statXp').textContent = state.xp + '/' + (state.level * XP_PER_LEVEL);
+    $('walletCoins').textContent = state.coins;
+    $('walletCrystals').textContent = state.crystals;
+    $('walletHunger').textContent = state.hunger;
+    $('walletHunger').style.color = state.hunger < 30 ? '#ff2d87' : '#ff6b35';
+
+    // Изменение эмодзи Насти
+    let nEmoji = '👩‍🦰';
+    if (state.equippedCosmetics.dress === 'c4') nEmoji = '👸';
+    else if (state.equippedCosmetics.hair === 'c3') nEmoji = '💃';
+    else if (state.equippedCosmetics.lip === 'c1' && state.equippedCosmetics.eyes === 'c2') nEmoji = '💋';
+    else if (state.equippedCosmetics.hat === 'u1') nEmoji = '👸';
+    else if (state.equippedCosmetics.hat === 'u5') nEmoji = '🤠';
+    else if (state.equippedCosmetics.hat === 'u6') nEmoji = '🐱';
+    
+    $('nastyaEmoji').textContent = nEmoji;
+    $('profileEmoji').textContent = nEmoji;
+
+    // Изменение эмодзи Гены
+    const currentSkin = GENA_SKINS.find(s => s.id === state.equippedSkin) || GENA_SKINS[0];
+    $('genaEmoji').textContent = currentSkin.emoji;
+
+    nastyaHpEl.style.width = Math.max(0, state.nastyaHp) + '%';
+    genaHpEl.style.width = Math.max(0, (state.genaHp / state.genaMaxHp) * 100) + '%';
+    
+    let nStatus = '';
+    if (state.rageActive) nStatus += '🔥';
+    if (state.combo >= 5) nStatus += '⚡';
+    if (state.hunger === 0) nStatus += '💀';
+    $('nastyaStatus').textContent = nStatus;
+    
+    let gStatus = '';
+    if (state.genaHp <= state.genaMaxHp * 0.25) gStatus += '😰';
+    else if (state.genaHp <= state.genaMaxHp * 0.5) gStatus += '😥';
+    $('genaStatus').textContent = gStatus;
+  }
+
+  function showCombo() {
+    if (state.combo > 1) { comboEl.textContent = '🔥 КОМБО x' + state.combo; comboEl.classList.remove('hidden'); }
+    else comboEl.classList.add('hidden');
+  }
+
+  function showDamage(targetEl, amount, color) {
+    const rect = targetEl.getBoundingClientRect();
+    const popup = document.createElement('div');
+    popup.className = 'damage-popup'; popup.textContent = '-' + amount; popup.style.color = color || '#ff2d87';
+    popup.style.left = (rect.left + rect.width / 2 - 20) + 'px'; popup.style.top = (rect.top + 10) + 'px';
+    document.body.appendChild(popup); setTimeout(() => popup.remove(), 900);
+  }
+
+  function flash() { $('flash').classList.remove('active'); void $('flash').offsetWidth; $('flash').classList.add('active'); }
+  function toast(msg) { $('toast').textContent = msg; $('toast').classList.add('show'); clearTimeout($('toast')._timer); $('toast')._timer = setTimeout(() => $('toast').classList.remove('show'), 2000); }
+  function vibrate(ms) { if (navigator.vibrate) navigator.vibrate(ms); }
+
+  function addRage(amount) {
+    state.rage = Math.min(100, state.rage + amount);
+    if (state.rage >= 100 && !state.rageActive) {
+      state.rageActive = true; state.rage = 100; rageOverlay.classList.add('active'); nastyaEl.classList.add('rage');
+      toast('🔥 ЯРОСТЬ НАСТИ! +50% УРОНА!'); addLog('', '🔥 ЯРОСТЬ НАСТИ! Урон увеличен на 50%!', 'buff-msg'); 
+      SFX.rage(); vibrate([50, 30, 50, 30, 100]);
+    }
+    updateUI();
+  }
+  function deactivateRage() { state.rageActive = false; state.rage = 0; rageOverlay.classList.remove('active'); nastyaEl.classList.remove('rage'); updateUI(); }
+
+  function addXp(amount) {
+    state.xp += amount;
+    if (state.xp >= state.level * XP_PER_LEVEL) {
+      state.xp -= state.level * XP_PER_LEVEL;
+      state.level++;
+      const coinReward = 20 + (state.level * 5);
+      state.coins += coinReward;
+      state.crystals += 1;
+
+      saveGame();
+      SFX.levelUp();
+      toast('🎉 УР. ' + state.level + '! +' + coinReward + '🪙 +1💎');
+      addLog('', '🎉 УРОВЕНЬ ' + state.level + '! Получено: ' + coinReward + ' монет и 1 кристалл.', 'buff-msg');
+      spawnConfetti();
+      checkAchievements();
+    }
+    updateUI();
+  }
+
+  function spawnConfetti() {
+    const colors = ['#ff2d87', '#ffcc00', '#4a9eff', '#ff6b35', '#6bc5ff', '#ff6b9d'];
+    for (let i = 0; i < 40; i++) {
+      setTimeout(() => {
+        const c = document.createElement('div'); c.className = 'confetti'; c.style.left = Math.random() * 100 + 'vw'; c.style.top = '-20px';
+        c.style.background = rand(colors); c.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+        c.style.width = (6 + Math.random() * 8) + 'px'; c.style.height = (6 + Math.random() * 8) + 'px';
+        document.body.appendChild(c); setTimeout(() => c.remove(), 2600);
+      }, i * 40);
+    }
+  }
+
+  function renderReasons() {
+    $('reasonList').innerHTML = '';
+    const available = ALL_REASONS.filter(r => r.unlockLvl <= state.level);
+    const shuffled = [...available].sort(() => Math.random() - 0.5).slice(0, Math.min(6, available.length));
+    
+    shuffled.forEach(r => {
+      const btn = document.createElement('button');
+      btn.className = 'reason-btn';
+      btn.innerHTML = `<span class="rtext">${r.icon} ${r.text}</span><span class="rstats">${r.dmg} dmg · x${r.combo}</span>`;
+      btn.addEventListener('click', () => selectReason(r));
+      $('reasonList').appendChild(btn);
+    });
+  }
+
+  function selectReason(reason) {
+    if (state.isAttacking || state.gameOver) return;
+    if (state.hunger < 10) { toast('💀 Настя голодна! Иди в Инвентарь (Холодильник).'); return; }
+    
+    $('reasonModal').classList.remove('show');
+    state.isAttacking = true; attackBtn.disabled = true;
+    state.hunger = Math.max(0, state.hunger - 10);
+    state.combo = reason.combo;
+    state.history.push({ round: state.round, reason: reason.text, dmg: 0 });
+
+    addLog('Настя', reason.icon + ' «' + reason.text + '!»', 'nastya-msg');
+    nastyaEl.classList.add('attack'); vibrate(30); addRage(8);
+    SFX.punch();
+
+    setTimeout(() => {
+      nastyaEl.classList.remove('attack'); flash();
+      const crit = Math.random() < (0.25 + (state.combo >= 4 ? 0.1 : 0));
+      let damage = reason.dmg;
+      if (crit) { damage = Math.round(damage * 1.5); state.crits++; state.lifetimeCrits++; checkAchievements(); }
+      if (state.rageActive) damage = Math.round(damage * 1.5);
+
+      if (Math.random() < (state.genaHp < state.genaMaxHp * 0.3 ? 0.15 : 0.05)) {
+        state.misses++; addLog('Гена', '«Увернулся!»', 'gena-msg'); addLog('', '💨 Гена уклонился!', 'system-msg'); toast('💨 Гена уклонился!');
+        SFX.error();
+        state.combo = 0; showCombo(); finishAttack(); return;
+      }
+
+      state.genaHp -= damage; state.battleDamage += damage; state.history[state.history.length - 1].dmg = damage;
+      genaEl.classList.add('hit'); showDamage(genaEl, damage, crit ? '#ffcc00' : (state.rageActive ? '#ff6b35' : '#ff2d87')); 
+      vibrate(crit ? [30, 30, 60] : 50);
+      if (crit) { SFX.crit(); addLog('', '💥 КРИТ! x1.5', 'system-msg'); }
+      else SFX.hit();
+      
+      updateUI(); showCombo();
+
+      setTimeout(() => {
+        genaEl.classList.remove('hit');
+        if (state.genaHp <= 0) { state.genaHp = 0; updateUI(); addLog('Гена', '...я всё понял.', 'gena-msg'); setTimeout(() => endRound(), 600); return; }
+        genaResponds();
+      }, 500);
+    }, 300);
+  }
+
+  function genaResponds() {
+    const excuse = rand(EXCUSES);
+    addLog('Гена', '«' + excuse + '»', 'gena-msg');
+    setTimeout(() => {
+      const counter = COUNTERS.find(c => excuse.toLowerCase().includes(c.trigger));
+      if (counter) {
+        state.combo += counter.comboAdd; if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+        let bonus = state.rageActive ? Math.round(counter.bonus * 1.5) : counter.bonus;
+        state.genaHp -= bonus; state.battleDamage += bonus;
+        if (bonus > 0) { 
+          showDamage(genaEl, bonus, '#ff6b35'); genaEl.classList.add('hit'); setTimeout(() => genaEl.classList.remove('hit'), 400); 
+          vibrate(40); addRage(5); SFX.hit();
+        }
+        addLog('Настя', '«' + counter.reply + '»', 'nastya-msg'); updateUI(); showCombo();
+      }
+      if (state.genaHp <= 0) { state.genaHp = 0; updateUI(); addLog('Гена', 'ладно, я понял... (врёт)', 'gena-msg'); setTimeout(() => endRound(), 600); return; }
+      finishAttack();
+    }, 700);
+  }
+
+  function finishAttack() {
+    state.round++; state.isAttacking = false; attackBtn.disabled = false; attackBtn.textContent = '🥊 Выбрать причину';
+    if (state.rageActive && state.rage > 0) { state.rage = Math.max(0, state.rage - 15); if (state.rage <= 0) deactivateRage(); }
+    updateUI(); showCombo();
+  }
+
+  function endRound() {
+    state.isAttacking = false; state.gameOver = true; attackBtn.disabled = true;
+
+    const xpGained = 20 + (state.level * 5);
+    const coinsGained = 20 + (state.level * 2);
+    const crystalsGained = 1;
+    
+    state.lifetimeDamage += state.battleDamage; state.genaDefeats++;
+    if (state.maxCombo > state.lifetimeMaxCombo) state.lifetimeMaxCombo = state.maxCombo;
+    
+    state.coins += coinsGained;
+    state.crystals += crystalsGained;
+    state.roulettePending = true;
+
+    checkAchievements();
+    SFX.win();
+    addXp(xpGained); saveGame();
+
+    $('resultEmoji').textContent = '🏆';
+    $('resultTitle').textContent = 'РАУНД ЗА НАСТЕЙ!';
+    $('resultText').innerHTML = `Гена сказал «ладно, я понял» (врёт).<br>Настя получила: <b>+${xpGained} XP</b>, <b>+${coinsGained} 🪙</b> и <b>+1 💎</b>!`;
+    spawnConfetti(); vibrate([50, 50, 50, 50, 100]);
+
+    let breakdown = '<div class="score-row"><span class="label">Урона нанесено</span><span class="value">' + state.battleDamage + '</span></div>';
+    breakdown += '<div class="score-row"><span class="label">Всего избиений</span><span class="value">' + state.genaDefeats + '</span></div>';
+    $('scoreBreakdown').innerHTML = breakdown;
+
+    $('rouletteBtn').style.display = 'block';
+    $('continueBtn').style.display = 'none';
+
+    setTimeout(() => $('resultModal').classList.add('show'), 500);
+  }
+
+  // === ПРОФИЛЬ И СКИНЫ ===
+  let currentProfTab = 'look';
+
+  function renderProfile() {
+    const content = $('profileContent');
+    content.innerHTML = '';
+    
+    $('profDefeats').textContent = state.genaDefeats + ' раз';
+    $('profDamage').textContent = state.lifetimeDamage;
+    $('profCrits').textContent = state.lifetimeCrits;
+    $('profCombo').textContent = 'x' + state.lifetimeMaxCombo;
+
+    if (currentProfTab === 'look') {
+      if (state.inventoryCosmetics.length === 0) {
+        content.innerHTML = '<p style="text-align:center; padding: 20px 0;">Гардероб пуст :( <br>Купи косметику в Золотом Яблоке или выбей в рулетке!</p>';
+      } else {
+        state.inventoryCosmetics.forEach(id => {
+          const item = COSMETICS_ITEMS.find(i => i.id === id) || UNIQUE_ITEMS.find(i => i.id === id);
+          if (!item) return;
+          
+          const isEquipped = state.equippedCosmetics[item.type] === id;
+          const uniqueClass = item.unique ? 'unique-glow' : '';
+          
+          const el = document.createElement('div');
+          el.className = 'shop-item';
+          el.innerHTML = `
+            <div class="shop-item-info">
+              <div class="shop-item-name ${uniqueClass}">${item.emoji} ${item.name}</div>
+              <div class="shop-item-desc">${item.desc}</div>
+            </div>
+            <button class="shop-buy-btn" onclick="equipCosmetic('${id}', '${item.type}')" ${isEquipped ? 'disabled' : ''}>
+              ${isEquipped ? 'Надето' : 'Надеть'}
+            </button>
+          `;
+          content.appendChild(el);
+        });
+      }
+    } else {
+      if (state.unlockedAchievements.length === 0) {
+        content.innerHTML = '<p style="text-align:center; padding: 20px 0;">Пока нет заслуг :( <br>Бей Гену, покупай вещи, качайся!</p>';
+      } else {
+        ACHIEVEMENTS.forEach(ach => {
+          const unlocked = state.unlockedAchievements.includes(ach.id);
+          if (!unlocked) return;
+          
+          const el = document.createElement('div');
+          el.className = 'shop-item';
+          el.innerHTML = `
+            <div class="shop-item-info">
+              <div class="shop-item-name">${ach.icon} ${ach.name}</div>
+              <div class="shop-item-desc">${ach.desc}</div>
+            </div>
+            <div style="font-size: 20px;">✅</div>
+          `;
+          content.appendChild(el);
+        });
+      }
+    }
+  }
+
+  window.equipCosmetic = function(id, type) {
+    if (state.equippedCosmetics[type] === id) {
+      delete state.equippedCosmetics[type];
+      SFX.buy();
+      toast('Снято: ' + (COSMETICS_ITEMS.find(i => i.id === id) || UNIQUE_ITEMS.find(i => i.id === id)).name);
+    } else {
+      state.equippedCosmetics[type] = id;
+      SFX.buy();
+      toast('✨ Надето: ' + (COSMETICS_ITEMS.find(i => i.id === id) || UNIQUE_ITEMS.find(i => i.id === id)).name);
+    }
+    vibrate(30);
+    saveGame();
+    updateUI();
+    renderProfile();
+  };
+
+  function renderGenaSkins() {
+    const content = $('genaSkinsContent');
+    content.innerHTML = '';
+    
+    GENA_SKINS.forEach(skin => {
+      const owned = state.unlockedSkins.includes(skin.id);
+      const isEquipped = state.equippedSkin === skin.id;
+      
+      const el = document.createElement('div');
+      el.className = 'shop-item';
+      el.innerHTML = `
+        <div class="shop-item-info">
+          <div class="shop-item-name">${skin.emoji} ${skin.name}</div>
+          <div class="shop-item-desc">${skin.desc}</div>
+        </div>
+        <button class="shop-buy-btn" onclick="handleSkin('${skin.id}', ${skin.price})" ${isEquipped ? 'disabled' : ''}>
+          ${isEquipped ? 'Выбран' : (owned ? 'Надеть' : skin.price + ' 💎')}
+        </button>
+      `;
+      content.appendChild(el);
+    });
+  }
+
+  window.handleSkin = function(id, price) {
+    const skin = GENA_SKINS.find(s => s.id === id);
+    if (state.unlockedSkins.includes(id)) {
+      state.equippedSkin = id;
+      SFX.buy();
+      toast('Гена надел: ' + skin.name);
+    } else {
+      if (state.crystals >= price) {
+        state.crystals -= price;
+        state.unlockedSkins.push(id);
+        state.equippedSkin = id;
+        SFX.buy();
+        toast('Куплено: ' + skin.name);
+      } else {
+        SFX.error();
+        toast('Не хватает кристаллов!');
+      }
+    }
+    vibrate(30);
+    saveGame();
+    updateUI();
+    renderGenaSkins();
+  };
+
+  // === ОБЫЧНАЯ РУЛЕТКА ===
+  let isSpinning = false;
+  let isPremiumSpinning = false;
+
+  function openRoulette() {
+    $('resultModal').classList.remove('show');
+    $('rouletteModal').classList.add('show');
+    $('spinBtn').style.display = 'block';
+    $('closeRouletteBtn').disabled = true;
+    isSpinning = false;
+    
+    const track = $('rouletteTrack');
+    track.style.transition = 'none';
+    track.style.transform = 'translateX(0)';
+    track.innerHTML = '';
+    
+    for (let i = 0; i < 50; i++) {
+      const prize = rand(ROULETTE_PRIZES);
+      const el = document.createElement('div');
+      el.className = 'roulette-item';
+      el.innerHTML = `<span class="r-emoji">${prize.emoji}</span><span style="color:${prize.color}">${prize.name.split(' ')[0]}</span>`;
+      track.appendChild(el);
+    }
+  }
+
+  $('spinBtn').addEventListener('click', () => {
+    if (isSpinning) return;
+    isSpinning = true;
+    $('spinBtn').style.display = 'none';
+    vibrate(50);
+    SFX.spin();
+
+    const track = $('rouletteTrack');
+    const itemWidth = 80;
+    const winIndex = 40;
+    const winPrize = rand(ROULETTE_PRIZES);
+    
+    track.innerHTML = '';
+    for (let i = 0; i < 50; i++) {
+      const p = (i === winIndex) ? winPrize : rand(ROULETTE_PRIZES);
+      const el = document.createElement('div');
+      el.className = 'roulette-item';
+      el.innerHTML = `<span class="r-emoji">${p.emoji}</span><span style="color:${p.color}">${p.name.split(' ')[0]}</span>`;
+      track.appendChild(el);
+    }
+
+    const containerWidth = document.querySelector('.roulette-container').offsetWidth;
+    const centerOffset = (containerWidth / 2) - (itemWidth / 2);
+    const scrollDistance = (winIndex * itemWidth) - centerOffset;
+    const randomOffset = (Math.random() * 40) - 20;
+    
+    track.style.transition = 'transform 4s cubic-bezier(0.15, 0.9, 0.2, 1)';
+    track.style.transform = `translateX(-${scrollDistance + randomOffset}px)`;
+
+    setTimeout(() => {
+      SFX.win();
+      if (winPrize.type === 'coins') {
+        state.coins += winPrize.amount;
+        toast('🎉 Выиграно: ' + winPrize.amount + ' монет!');
+      } else if (winPrize.type === 'crystals') {
+        state.crystals += winPrize.amount;
+        toast('🎉 Выиграно: ' + winPrize.amount + ' кристаллов!');
+      } else if (winPrize.type === 'item') {
+        state.inventoryFridge.push(winPrize.id);
+        const item = FOOD_ITEMS.find(i => i.id === winPrize.id);
+        toast('🎉 Выиграно: ' + item.name + ' (в Холодильник)');
+      }
+      
+      saveGame(); updateUI();
+      isSpinning = false;
+      $('closeRouletteBtn').disabled = false;
+    }, 4200);
+  });
+
+  $('closeRouletteBtn').addEventListener('click', () => {
+    $('rouletteModal').classList.remove('show');
+    $('continueBtn').style.display = 'block';
+    $('rouletteBtn').style.display = 'none';
+    $('resultModal').classList.add('show');
+  });
+
+  // === ЗОЛОТАЯ РУЛЕТКА ===
+  function openPremiumRoulette() {
+    $('shopModal').classList.remove('show');
+    $('premiumRouletteModal').classList.add('show');
+    isPremiumSpinning = false;
+    
+    const track = $('premiumTrack');
+    track.style.transition = 'none';
+    track.style.transform = 'translateX(0)';
+    track.innerHTML = '';
+    
+    for (let i = 0; i < 50; i++) {
+      const prize = rand(UNIQUE_ITEMS);
+      const el = document.createElement('div');
+      el.className = 'roulette-item';
+      el.innerHTML = `<span class="r-emoji">${prize.emoji}</span><span style="color:#ffcc00; font-size:10px;">${prize.name.split(' ')[0]}</span>`;
+      track.appendChild(el);
+    }
+  }
+
+  $('premiumSpinBtn').addEventListener('click', openPremiumRoulette);
+  $('premiumSpinBtnGo').addEventListener('click', () => {
+    if (isPremiumSpinning) return;
+    if (state.crystals < 50) { SFX.error(); toast('Не хватает 50 кристаллов!'); return; }
+    
+    state.crystals -= 50;
+    updateUI(); saveGame();
+    
+    isPremiumSpinning = true;
+    $('premiumSpinBtnGo').style.display = 'none';
+    vibrate(50);
+    SFX.spin();
+
+    const track = $('premiumTrack');
+    const itemWidth = 80;
+    const winIndex = 40;
+    
+    const availableUniques = UNIQUE_ITEMS.filter(i => !state.inventoryCosmetics.includes(i.id));
+    const winPrize = availableUniques.length > 0 ? rand(availableUniques) : rand(UNIQUE_ITEMS);
+    
+    track.innerHTML = '';
+    for (let i = 0; i < 50; i++) {
+      const p = (i === winIndex) ? winPrize : rand(UNIQUE_ITEMS);
+      const el = document.createElement('div');
+      el.className = 'roulette-item';
+      el.innerHTML = `<span class="r-emoji">${p.emoji}</span><span style="color:#ffcc00; font-size:10px;">${p.name.split(' ')[0]}</span>`;
+      track.appendChild(el);
+    }
+
+    const containerWidth = document.querySelector('#premiumRouletteModal .roulette-container').offsetWidth;
+    const centerOffset = (containerWidth / 2) - (itemWidth / 2);
+    const scrollDistance = (winIndex * itemWidth) - centerOffset;
+    const randomOffset = (Math.random() * 40) - 20;
+    
+    track.style.transition = 'transform 4s cubic-bezier(0.15, 0.9, 0.2, 1)';
+    track.style.transform = `translateX(-${scrollDistance + randomOffset}px)`;
+
+    setTimeout(() => {
+      SFX.win();
+      spawnConfetti();
+      
+      if (!state.inventoryCosmetics.includes(winPrize.id)) {
+        state.inventoryCosmetics.push(winPrize.id);
+        toast('🌟 ВЫПАЛ УНИКАЛЬНЫЙ ПРЕДМЕТ: ' + winPrize.name + '!');
+        addLog('', '🌟 Из золотой рулетки выпал уникальный предмет: ' + winPrize.name, 'buff-msg');
+      } else {
+        toast('🌟 Выпал дубликат: ' + winPrize.name + ' (возвращено 20 💎)');
+        state.crystals += 20;
+      }
+      
+      checkAchievements();
+      saveGame(); updateUI();
+      isPremiumSpinning = false;
+      $('premiumSpinBtnGo').style.display = 'block';
+    }, 4200);
+  });
+
+  // === ИНВЕНТАРЬ И МАГАЗИНЫ ===
+  let currentShopTab = 'food';
+
+  function renderInventory() {
+    const content = $('invContent');
+    content.innerHTML = '';
+    
+    if (state.inventoryFridge.length === 0) {
+      content.innerHTML = '<p style="text-align:center; padding: 20px 0;">Холодильник пуст :( <br>Купи еду в Перекрестке или выбей в рулетке!</p>';
+    } else {
+      const counts = {};
+      state.inventoryFridge.forEach(id => counts[id] = (counts[id] || 0) + 1);
+      
+      Object.keys(counts).forEach(id => {
+        const item = FOOD_ITEMS.find(i => i.id === id);
+        if (!item) return;
+        
+        const el = document.createElement('div');
+        el.className = 'shop-item';
+        el.innerHTML = `
+          <div class="shop-item-info">
+            <div class="shop-item-name">${item.name} (x${counts[id]})</div>
+            <div class="shop-item-desc">${item.desc}</div>
+          </div>
+          <button class="shop-buy-btn" onclick="eatFood('${id}')">Съесть</button>
+        `;
+        content.appendChild(el);
+      });
+    }
+  }
+
+  window.eatFood = function(id) {
+    const index = state.inventoryFridge.indexOf(id);
+    if (index > -1) {
+      const item = FOOD_ITEMS.find(i => i.id === id);
+      state.inventoryFridge.splice(index, 1);
+      state.hunger = Math.min(100, state.hunger + item.hunger);
+      SFX.eat();
+      toast('🍽️ Настя поела: ' + item.name);
+      vibrate(30);
+      saveGame();
+      updateUI();
+      renderInventory();
+    }
+  };
+
+  function renderShop() {
+    const content = $('shopContent');
+    content.innerHTML = '';
+    
+    if (currentShopTab === 'food') {
+      $('genaSkinsBtn').style.display = 'none';
+      FOOD_ITEMS.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'shop-item';
+        el.innerHTML = `
+          <div class="shop-item-info">
+            <div class="shop-item-name">${item.name}</div>
+            <div class="shop-item-desc">${item.desc}</div>
+          </div>
+          <button class="shop-buy-btn" onclick="buyFood('${item.id}')">${item.price} 🪙</button>
+        `;
+        content.appendChild(el);
+      });
+    } else {
+      $('genaSkinsBtn').style.display = 'block';
+      COSMETICS_ITEMS.forEach(item => {
+        const owned = state.inventoryCosmetics.includes(item.id);
+        const el = document.createElement('div');
+        el.className = 'shop-item';
+        el.innerHTML = `
+          <div class="shop-item-info">
+            <div class="shop-item-name">${item.emoji} ${item.name}</div>
+            <div class="shop-item-desc">${item.desc}</div>
+          </div>
+          <button class="shop-buy-btn" onclick="buyCosmetic('${item.id}')" ${owned ? 'disabled' : ''}>
+            ${owned ? 'Куплено' : item.price + ' 💎'}
+          </button>
+        `;
+        content.appendChild(el);
+      });
+    }
+  }
+
+  window.buyFood = function(id) {
+    const item = FOOD_ITEMS.find(i => i.id === id);
+    if (state.coins >= item.price) {
+      state.coins -= item.price;
+      state.inventoryFridge.push(id);
+      SFX.coin();
+      toast('Куплено: ' + item.name + ' (в Холодильник)');
+      vibrate(30); saveGame(); updateUI(); renderShop();
+    } else { SFX.error(); toast('Не хватает монет! Ищи промокод 😉'); }
+  };
+
+  window.buyCosmetic = function(id) {
+    const item = COSMETICS_ITEMS.find(i => i.id === id);
+    if (state.inventoryCosmetics.includes(id)) { toast('Уже куплено!'); return; }
+    if (state.crystals >= item.price) {
+      state.crystals -= item.price;
+      state.inventoryCosmetics.push(id);
+      SFX.buy();
+      toast('Куплено: ' + item.name + ' (в Профиль Насти)');
+      vibrate(30); saveGame(); updateUI(); renderShop();
+    } else { SFX.error(); toast('Не хватает кристаллов! (Дают 1шт за уровень)'); }
+  };
+
+  // === СОБЫТИЯ ===
+  attackBtn.addEventListener('click', () => {
+    if (state.isAttacking || state.gameOver) return;
+    if (state.hunger < 10) { SFX.error(); toast('💀 Настя голодна! Загляни в Холодильник.'); return; }
+    vibrate(20); renderReasons(); $('reasonModal').classList.add('show');
+  });
+
+  $('profileBtn').addEventListener('click', () => {
+    vibrate(20);
+    renderProfile();
+    $('profileModal').classList.add('show');
+  });
+
+  $('profTabLook').addEventListener('click', () => {
+    currentProfTab = 'look';
+    $('profTabLook').classList.add('active');
+    $('profTabAch').classList.remove('active');
+    renderProfile();
+  });
+  $('profTabAch').addEventListener('click', () => {
+    currentProfTab = 'ach';
+    $('profTabAch').classList.add('active');
+    $('profTabLook').classList.remove('active');
+    renderProfile();
+  });
+
+  $('resetBtn').addEventListener('click', () => {
+    if (!confirm('Удалить весь прогресс?')) return;
+    localStorage.removeItem('nastya_vs_gena_save_v8');
+    location.reload();
+  });
+
+  $('continueBtn').addEventListener('click', () => { vibrate(20); continueGame(); });
+  $('playAgainBtn').addEventListener('click', () => { vibrate(20); $('resultModal').classList.remove('show'); location.reload(); });
+  $('startGameBtn').addEventListener('click', () => { vibrate(20); state.hasSeenTutorial = true; saveGame(); $('tutorialModal').classList.remove('show'); });
+  $('helpBtn').addEventListener('click', () => { vibrate(20); $('tutorialModal').classList.add('show'); });
+
+  $('shopBtn').addEventListener('click', () => { vibrate(20); renderShop(); $('shopModal').classList.add('show'); });
+  $('tabFood').addEventListener('click', () => { currentShopTab = 'food'; $('tabFood').classList.add('active'); $('tabCosmetics').classList.remove('active'); renderShop(); });
+  $('tabCosmetics').addEventListener('click', () => { currentShopTab = 'cosmetics'; $('tabCosmetics').classList.add('active'); $('tabFood').classList.remove('active'); renderShop(); });
+
+  $('genaSkinsBtn').addEventListener('click', () => {
+    vibrate(20);
+    renderGenaSkins();
+    // Закрываем магазин перед открытием скинов, чтобы окна не перекрывались
+    $('shopModal').classList.remove('show');
+    setTimeout(() => $('genaSkinsModal').classList.add('show'), 300);
+  });
+
+  $('invBtn').addEventListener('click', () => { vibrate(20); renderInventory(); $('invModal').classList.add('show'); });
+
+  $('promoBtn').addEventListener('click', () => { vibrate(20); $('promoInput').value = ''; $('promoModal').classList.add('show'); });
+  
+  $('redeemBtn').addEventListener('click', () => {
+    const code = $('promoInput').value.trim().toUpperCase();
+    if (!code) return;
+    
+    if (code === 'TEST') {
+      state.coins += 10000;
+      state.crystals += 1000;
+      
+      COSMETICS_ITEMS.forEach(i => { if(!state.inventoryCosmetics.includes(i.id)) state.inventoryCosmetics.push(i.id); });
+      UNIQUE_ITEMS.forEach(i => { if(!state.inventoryCosmetics.includes(i.id)) state.inventoryCosmetics.push(i.id); });
+      FOOD_ITEMS.forEach(i => { if(!state.inventoryFridge.includes(i.id)) state.inventoryFridge.push(i.id); });
+      GENA_SKINS.forEach(i => { if(!state.unlockedSkins.includes(i.id)) state.unlockedSkins.push(i.id); });
+      
+      ACHIEVEMENTS.forEach(a => { if(!state.unlockedAchievements.includes(a.id)) state.unlockedAchievements.push(a.id); });
+      
+      saveGame(); updateUI(); $('promoModal').classList.remove('show');
+      SFX.win(); spawnConfetti(); vibrate([50, 100, 50, 100, 200]);
+      toast('👑 ТЕСТОВЫЙ РЕЖИМ АКТИВИРОВАН!');
+      addLog('', '👑 Активирован тестовый режим. Всё открыто.', 'buff-msg');
+      return;
+    }
+
+    if (code === 'GENAILOVEYOU') {
+      GENA_SKINS.forEach(i => { if(!state.unlockedSkins.includes(i.id)) state.unlockedSkins.push(i.id); });
+      saveGame(); updateUI(); $('promoModal').classList.remove('show');
+      SFX.win(); spawnConfetti(); vibrate([50, 100, 50, 100, 200]);
+      toast('🐶 Все скины Гены открыты!');
+      addLog('', '🐶 Промокод GENAILOVEYOU активирован. Все образы Гены доступны.', 'buff-msg');
+      return;
+    }
+    
+    if (state.usedPromos.includes(code)) { SFX.error(); toast('Этот промокод уже использован!'); return; }
+    
+    if (PROMO_CODES[code]) {
+      const reward = PROMO_CODES[code];
+      state.coins += reward.coins || 0; state.crystals += reward.crystals || 0;
+      state.usedPromos.push(code);
+      saveGame(); updateUI(); $('promoModal').classList.remove('show');
+      SFX.win();
+      toast('🎁 Промокод активирован!'); spawnConfetti(); vibrate([50, 30, 50, 30, 100]);
+      addLog('', '🎁 Активирован промокод! Получено: ' + (reward.coins||0) + ' 🪙 и ' + (reward.crystals||0) + ' 💎.', 'buff-msg');
+      checkAchievements();
+    } else { SFX.error(); toast('Неверный промокод!'); vibrate([50, 100, 50]); }
+  });
+
+  $('rouletteBtn').addEventListener('click', () => { vibrate(20); openRoulette(); });
+
+  function continueGame() {
+    $('resultModal').classList.remove('show');
+    state.roulettePending = false;
+    state.round = 1; state.nastyaHp = 100; state.genaMaxHp = 100 + (state.level * 10); state.genaHp = state.genaMaxHp;
+    state.combo = 0; state.maxCombo = 0; state.battleDamage = 0; state.crits = 0; state.misses = 0; state.history = []; state.isAttacking = false; state.gameOver = false;
+    deactivateRage(); updateUI(); showCombo(); logEl.innerHTML = '';
+    attackBtn.disabled = false; attackBtn.textContent = '🥊 Выбрать причину';
+    addLog('', 'Новый день. Гена снова что-то сделал. Настя готова.', 'system-msg');
+    saveGame();
+  }
+
+  let lastTouch = 0;
+  document.addEventListener('touchend', (e) => { const now = Date.now(); if (now - lastTouch <= 300) e.preventDefault(); lastTouch = now; }, { passive: false });
+  document.body.addEventListener('touchmove', (e) => { if (e.target.closest('.log') || e.target.closest('.modal')) return; e.preventDefault(); }, { passive: false });
+
+  function init() {
+    updateUI();
+    addLog('', 'Настя просыпается. Гена уже что-то сделал. Она это чувствует.', 'system-msg');
+    addLog('', '⚠️ Уровень голода: ' + state.hunger + '%. Каждый удар отнимает 10%.', 'system-msg');
+    if (!state.hasSeenTutorial) $('tutorialModal').classList.add('show');
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
